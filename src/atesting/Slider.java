@@ -21,20 +21,20 @@ public class Slider extends PApplet {
 	boolean pressTrigger;
 	boolean locked = false;
 	
-	public Slider(PApplet ip, int ix, int iy, int il, int is, int a, int s) {
-		p = ip;
-		x = ix;
-		y = iy;
+	public Slider(PApplet thisApplet, int sliderX, int sliderY, int il, int is, int sliderWidth, int s) {
+		p = thisApplet;
+		x = sliderX;
+		y = sliderY;
 		stretch = il;
 		size = is;
-		w = a;
+		w = sliderWidth;
 		segment = s;
 		pos = round((lockSlider(p.mouseX - size / 2, x, w + x) - x) / (float) (w / segment));
 		boxx = stretch - size / 2;
 		boxy = y - size / 2;
 	}
 	
-	public void updateDisplay() {
+	public void updateDisplay() { // put in draw()
 		update();
 		display();
 	}
@@ -81,6 +81,7 @@ public class Slider extends PApplet {
 	public void display() {
 		p.fill(255);
 		p.stroke(0);
+		p.strokeWeight(1);
 		p.rect(x - 3, y - size / 2 + 3, w + size + 6, size - 6, 3);
 		p.rect(boxx, boxy, size, size);
 		if (over || press) {

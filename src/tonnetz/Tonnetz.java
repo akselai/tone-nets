@@ -38,7 +38,7 @@ public class Tonnetz extends PApplet {
 			" 889.73529", "2/1" };
 	public static double[] MIDIPitches = new double[128];
 
-	// Slider sz = new Slider(this, 50, 700, 50, 25, 500, 100);
+	//Slider sz = new Slider(this, 50, 700, 50, 25, 500, 100);
 
 	public static void main(String[] args) {
 		PApplet.main("tonnetz.Tonnetz");
@@ -81,9 +81,10 @@ public class Tonnetz extends PApplet {
 		// }
 		lat.drawLattice();
 		lat.circleKeyPressNotes();
+
 		// circleMIDINotes();
-		// sz.update();
-		// sz.display();
+		//sz.update();
+		//sz.display();
 	}
 
 	public void mousePressed() {
@@ -119,6 +120,41 @@ public class Tonnetz extends PApplet {
 			// playTone(a[0], a[1], ShortMessage.NOTE_OFF);
 		}
 		// println(rungsPressed);
+	}
+
+	public class IntervalColor {
+		int[] c;
+		Interval[] I;
+		double[] res;
+
+		public IntervalColor(int[] colors, Interval[] intervals) {
+			c = colors;
+			I = intervals;
+		}
+
+		public double kernel(double x, double d) {
+			return Math.exp(-x * x / d); // gaussian
+		} // or you can try other kernel
+
+		public void getAccuracy_1(Interval J) { // get accuracy over all intervals
+			this.res = new double[min(this.c.length, this.I.length)];
+			for (int i = 0; i < res.length; i++)
+				res[i] = kernel(J.value() - this.I[i].value(), 0.01);
+		}
+
+		public int getColor(Interval I) { // draw color
+			int c_ = 0x00000000;
+			for (int i = 0; i < this.res.length; i++)
+				c_ = lerpColor(c_, this.c[i], (float) this.res[i]);
+			return c_;
+		}
+
+		public double getAccuracy(Interval I) {
+			double a = 0;
+			for (int i = 0; i < this.res.length; i++)
+				a += this.res[i];
+			return a;
+		}
 	}
 
 	class Calc { // ragtag calculations
@@ -335,7 +371,7 @@ public class Tonnetz extends PApplet {
 		}
 	}
 
-	class ActuallyPlayTheMIDILikeIDKAndOtherJunkThatIveSpentSoManyHoursOn {
+	class RecycleBin {
 		ArrayList<int[]> midiNoteOn = new ArrayList<int[]>(); // what midi keys are on (channel, note)
 
 		float cmod(float a, float b) {

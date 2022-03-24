@@ -17,12 +17,20 @@ public class ATesting extends PApplet {
 
 	IntervalColor ic;
 	TextField tf;
-	MultilineTextBox textBox = new MultilineTextBox(this, "Your Text", 50, 50, 200, 50);
+	MultilineTextBox scaleSizeTextBox = new MultilineTextBox(this, "Scale Size", 50, 50, 200, 35);
+	MultilineTextBox scalaTextBox = new MultilineTextBox(this, "", 50, 130, 200, 300);
+
+	DoubleList points = new DoubleList(); // represents intervals generated
+	Interval[] scala = new Interval[] {}; // the list of Intervals translated from points through private function
+											// scalaInterval
+	int leftSlideWidth = 270, rightSlideWidth = 270;
 
 	public void setup() {
 		colorMode(HSB);
 		surface.setResizable(true);
 		tf = new TextField("", 20);
+
+		ic = new IntervalColor(new int[] { 0xffff7918, 0xff2986cc, 0xffffe200, 0xfff44336, 0xffff7918, 0xff2986cc, 0xffffe200, 0xfff44336 }, new Interval[] { new Interval(4, 3), new Interval(5, 4), new Interval(6, 5), new Interval(16, 15), new Interval(3, 2), new Interval(8, 5), new Interval(5, 3), new Interval(15, 8) });
 	}
 
 	public int[] MOSRanges(int a, int b) {
@@ -34,8 +42,7 @@ public class ATesting extends PApplet {
 		}
 		return new int[] {};
 	}
-
-	DoubleList points = new DoubleList(); // represents intervals generated
+	
 	RotarySlider s = new RotarySlider(this, 300, 300, 275, 25);
 	int scaleSize = 9;
 	int rd;
@@ -60,21 +67,35 @@ public class ATesting extends PApplet {
 
 	public void draw() {
 		try {
-			scaleSize = Integer.parseInt(textBox.text[0]);
+			scaleSize = Integer.parseInt(scaleSizeTextBox.text[0]);
 		} catch (Exception x) {
 
 		}
 
-		ic = new IntervalColor(new int[] { 0xffff7918, 0xff2986cc, 0xffffe200, 0xfff44336, 0xffff7918, 0xff2986cc, 0xffffe200, 0xfff44336 }, new Interval[] { new Interval(4, 3), new Interval(5, 4), new Interval(6, 5), new Interval(16, 15), new Interval(3, 2), new Interval(8, 5), new Interval(5, 3), new Interval(15, 8) });
 		background(255);
 
-		textBox.update();
-		textBox.display();
+		stroke(0xff000000);
+		strokeWeight(2);
+		line(leftSlideWidth, 0, leftSlideWidth, height);
+		line(width - rightSlideWidth, 0, width - rightSlideWidth, height);
+
+		scaleSizeTextBox.display();
+		scalaTextBox.hasFocus = true;
+		scalaInterval();
+		try {
+			if (scala.length != 0)
+				scalaTextBox.text = new String[scala.length];
+			else
+				scalaTextBox.text = new String[] {""};
+			for (int i = 0; i < scala.length; i++)
+				scalaTextBox.text[i] = String.valueOf(scala[i]);
+		} catch (Exception x) {
+		}
+		scalaTextBox.display();
 
 		rectMode(CENTER);
 		noFill();
-		stroke(0xff000000);
-		strokeWeight(2);
+
 		rd = min(height, width);
 		ellipse(width / 2, height / 2, rd - 50, rd - 50);
 		points.clear();
@@ -127,21 +148,30 @@ public class ATesting extends PApplet {
 	}
 
 	public void mousePressed() {
-		textBox.updatePress();
+		scaleSizeTextBox.updatePress();
 	}
 
 	public void mouseDragged() {
-		textBox.updateDrag();
+		scaleSizeTextBox.updateDrag();
 	}
 
 	public void mouseReleased() {
-		textBox.updateRelease();
+		scaleSizeTextBox.updateRelease();
 
 		s.releaseEvent();
 	}
 
 	public void keyPressed() {
-		textBox.updateKeys();
+		scaleSizeTextBox.updateKeys();
+	}
+
+	private void scalaInterval() {
+		scala = new Interval[points.size()];
+		for (int i = 0; i < points.size(); i++) {
+			scala[i] = new Interval(points.get(i) / Math.PI / 2 * 1200);
+		}
+		scala = Interval.reduce(scala, Interval.OCTAVE);
+		scala = Interval.sort(scala);
 	}
 
 	private double triangle(double x) {

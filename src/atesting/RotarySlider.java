@@ -5,7 +5,7 @@ import processing.core.PApplet;
 public class RotarySlider extends PApplet {
 
 	PApplet p;
-	int boxx, boxy; // position of button
+	float boxx, boxy; // position of button
 	int buttonWidth;
 	boolean over;
 	boolean press;
@@ -41,8 +41,9 @@ public class RotarySlider extends PApplet {
 
 		if (press)
 			theta = Math.atan2(p.mouseY - centerY, p.mouseX - centerX);
-		boxx = (int) (radius * Math.cos(theta) + centerX);
-		boxy = (int) (radius * Math.sin(theta) + centerY);
+		theta = (theta >= 0 ? theta : theta + 2 * Math.PI);
+		boxx = (float) (radius * Math.cos(theta) + centerX);
+		boxy = (float) (radius * Math.sin(theta) + centerY);
 
 		prevPress = p.mousePressed; // THIS LINE IS A ONE BIT MEMORY AND ALWAYS GOES LAST
 	}
@@ -85,7 +86,7 @@ public class RotarySlider extends PApplet {
 		p.popMatrix();
 	}
 
-	boolean overRect(int x, int y, int w, int h) {
+	boolean overRect(float x, float y, float w, float h) {
 		if (p.mouseX >= x - w / 2 && p.mouseX <= x + w / 2 && p.mouseY >= y - h / 2 && p.mouseY <= y + h / 2) {
 			return true;
 		} else {

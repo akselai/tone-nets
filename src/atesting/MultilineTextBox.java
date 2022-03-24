@@ -2,15 +2,16 @@ package atesting;
 
 import java.awt.event.KeyEvent;
 
-import processing.core.PApplet;
-import processing.core.PVector;
+import processing.core.*;
 
 public class MultilineTextBox extends PApplet {
 	/*
-	 * WIP textbox (WIP stands for wet interface :b:ussy) :flushed:
+	 * WIP textbox
 	 */
 	PApplet p;
 
+	PFont font;
+	int fontSize = 20;
 	String prompt;
 	String[] text;
 	int xpos;
@@ -26,10 +27,12 @@ public class MultilineTextBox extends PApplet {
 	float WIDTH;
 	float HEIGHT;
 
-	boolean inverseBackground;
 	boolean hasFocus;
 	boolean hasInputFocus;
 
+	// boolean drawBox;
+	
+	// int lineLimit;
 	int lastPress = -500;
 
 	MultilineTextBox(PApplet thisApplet, String prompt, float x, float y, float w, float h) {
@@ -45,23 +48,6 @@ public class MultilineTextBox extends PApplet {
 		xpos = 0;
 
 		loc = new PVector(x, y);
-	}
-
-	MultilineTextBox(PApplet thisApplet, String prompt, float x, float y, float w, float h, boolean inverseBackground) {
-		p = thisApplet;
-
-		WIDTH = w;
-		HEIGHT = h;
-
-		this.prompt = prompt;
-		text = new String[1];
-		text[0] = "";
-		ypos = 0;
-		xpos = 0;
-
-		loc = new PVector(x, y);
-
-		this.inverseBackground = inverseBackground;
 	}
 
 	void update() {
@@ -266,7 +252,7 @@ public class MultilineTextBox extends PApplet {
 		if (alreadyPressed) {
 			selecting = true;
 
-			ypos2 = (int) (constrain((float) (p.mouseY - loc.y) / 12f, 0, text.length - 1));
+			ypos2 = (int) (constrain((float) (p.mouseY - loc.y) / fontSize, 0, text.length - 1));
 
 			for (int i = 0; i < text[ypos2].length(); i++) {
 				if (p.mouseX - loc.x - 4 <= p.textWidth(text[ypos2].substring(0, i)) + p.textWidth(text[ypos2].charAt(i)) / 2) {
@@ -279,8 +265,7 @@ public class MultilineTextBox extends PApplet {
 		} else {
 			selecting = false;
 
-			ypos = (int) (constrain((float) (p.mouseY - loc.y) / 12f, 0, text.length - 1));
-
+			ypos = (int) (constrain((float) (p.mouseY - loc.y) / fontSize, 0, text.length - 1));
 			for (int i = 0; i < text[ypos].length(); i++) {
 				if (p.mouseX - loc.x - 4 <= p.textWidth(text[ypos].substring(0, i)) + p.textWidth(text[ypos].charAt(i)) / 2) {
 					xpos = i;
@@ -293,20 +278,23 @@ public class MultilineTextBox extends PApplet {
 	}
 
 	void display() {
-		if (inverseBackground)
-			p.fill(0);
-		else
-			p.fill(255);
-		p.stroke(0);
-		if (hasInputFocus)
-			p.strokeWeight(2);
-		else
-			p.strokeWeight(1);
+		p.colorMode(RGB);
+		
+		p.fill(255);
+		p.strokeWeight(2);
 		p.rectMode(CORNER);
 
-		p.rect(loc.x, loc.y, WIDTH, HEIGHT);
+		if (hasInputFocus)
+			p.stroke(220, 150, 90);
+		else 
+			p.stroke(0);
+		p.rect(loc.x, loc.y, WIDTH, HEIGHT, 6);
 
-		p.textSize(12);
+		p.stroke(0);
+		font = p.createFont("audiowide.ttf", fontSize);
+		p.textFont(font);
+
+		p.textSize(fontSize);
 		p.textAlign(LEFT, TOP);
 		if (hasFocus)
 			p.fill(0);
@@ -315,9 +303,9 @@ public class MultilineTextBox extends PApplet {
 
 		if (hasFocus) {
 			for (int i = 0; i < text.length; i++)
-				p.text(text[i], loc.x + 4, loc.y + 2 + i * 12);
+				p.text(text[i], (int) (loc.x + 4), (int) (loc.y + 5 + i * fontSize));
 		} else
-			p.text(prompt, loc.x + 4, loc.y + 2);
+			p.text(prompt, (int) (loc.x + 4), (int) (loc.y + 5));
 
 		ypos = constrain(ypos, 0, text.length);
 		ypos2 = constrain(ypos2, 0, text.length);
@@ -344,19 +332,19 @@ public class MultilineTextBox extends PApplet {
 			}
 
 			if (minypos == maxypos)
-				p.rect(loc.x + 4 + p.textWidth(text[minypos].substring(0, minxpos)), loc.y + 4 + minypos * 12, p.textWidth(text[maxypos].substring(0, maxxpos)) - p.textWidth(text[maxypos].substring(0, minxpos)), 12);
+				p.rect(loc.x + 4 + p.textWidth(text[minypos].substring(0, minxpos)), loc.y + 4 + minypos * fontSize, p.textWidth(text[maxypos].substring(0, maxxpos)) - p.textWidth(text[maxypos].substring(0, minxpos)), fontSize);
 			else {
 				for (int y = minypos; y <= maxypos; y++) {
 					for (int x = 0; x < text[y].length(); x++) {
 						if ((y == minypos ? x >= minxpos : true) && (y == maxypos ? x < maxxpos : true))
-							p.rect(loc.x + 4 + p.textWidth(text[y].substring(0, x)), loc.y + 4 + y * 12, p.textWidth(text[y].charAt(x)), 12);
+							p.rect(loc.x + 4 + p.textWidth(text[y].substring(0, x)), loc.y + 4 + y * fontSize, p.textWidth(text[y].charAt(x)), fontSize);
 					}
 					if (text[y].length() <= 0)
-						p.rect(loc.x + 4, loc.y + 4 + y * 12, p.textWidth(" ") / 2, 12);
+						p.rect(loc.x + 4, loc.y + 4 + y * fontSize, p.textWidth(" ") / 2, fontSize);
 				}
 			}
 		} else if (hasInputFocus && p.millis() / 300 % 2 == 1)
-			p.line(loc.x + 4 + p.textWidth(text[ypos].substring(0, xpos)), loc.y + 4 + ypos * 12, (loc.x + 4 + p.textWidth(text[ypos].substring(0, xpos))), loc.y + 16 + ypos * 12);
+			p.line(loc.x + 4 + p.textWidth(text[ypos].substring(0, xpos)), loc.y + 8 + ypos * fontSize, (loc.x + 4 + p.textWidth(text[ypos].substring(0, xpos))), loc.y + 8 + fontSize + ypos * fontSize);
 	}
 
 	String[] getText() {

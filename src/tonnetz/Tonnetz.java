@@ -12,12 +12,6 @@ import processing.core.PFont;
 import processing.core.PVector;
 import processing.data.IntList;
 
-// TODO map the scale degrees to MIDI notes (which midi note is 1/1?) complete!
-//      UI design (ok maybe later) (esc to go to menu)
-//      mouse actions bc keyboard succs
-//      finally implement the midi
-//      and also the synth and then publish as v0_beta
-
 public class Tonnetz extends PApplet {
 
 	/*
@@ -26,19 +20,17 @@ public class Tonnetz extends PApplet {
 
 	PFont l_font, u_font; // lattice font, ui font
 
-	File midiFile = null;
+	File MidiFile = null;
 
 	Lattice lat = new Lattice();
 
 	IntList keysPressed = new IntList(); // what keys are pressed
 
-	ArrayList<int[]> scale = new ArrayList<int[]>(); // the scale of vectors in the canonical basis (integer exps of
-														// primes)
-	String[] scalaFile = { "! pentatonic.scl", "!", " ", " 5 ", "!", " 193.15686", " 5/4 pure", "696.57843",
-			" 889.73529", "2/1" };
-	public static double[] MIDIPitches = new double[128];
+	ArrayList<int[]> scale = new ArrayList<int[]>(); // the scale of vectors in the canonical basis (integer exps of primes)
+	String[] scalaFile;
+	public static double[] MidiPitches = new double[128]; // the cps of Midi notes
 
-	//Slider sz = new Slider(this, 50, 700, 50, 25, 500, 100);
+	// Slider sz = new Slider(this, 50, 700, 50, 25, 500, 100);
 
 	public static void main(String[] args) {
 		PApplet.main("tonnetz.Tonnetz");
@@ -50,15 +42,17 @@ public class Tonnetz extends PApplet {
 
 	public void setup() {
 		try {
+			scalaFile = loadStrings("C:\\Users\\under\\eclipse-workspace\\tonnetz\\src\\sevish.scl");
 			ScaleInterpreter.interpretFile(scalaFile);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		surface.setResizable(true);
 
-		int[][] z = { { 0, 0 }, { -1, -1 }, { 2, 0 }, { 1, -1 }, { 0, 1 }, { -1, 0 }, { 2, 1 }, { 1, 0 }, { 0, -1 },
-				{ -1, 1 }, { 2, -1 }, { 1, 1 } };
+		for (double m : MidiPitches)
+			println(m + ", ");
+
+		int[][] z = { { 0, 0 }, { -1, -1 }, { 2, 0 }, { 1, -1 }, { 0, 1 }, { -1, 0 }, { 2, 1 }, { 1, 0 }, { 0, -1 }, { -1, 1 }, { 2, -1 }, { 1, 1 } };
 		for (int i = 0; i < 12; i++) {
 			scale.add(z[i]);
 		}
@@ -82,9 +76,9 @@ public class Tonnetz extends PApplet {
 		lat.drawLattice();
 		lat.circleKeyPressNotes();
 
-		// circleMIDINotes();
-		//sz.update();
-		//sz.display();
+		// circleMidiNotes();
+		// sz.update();
+		// sz.display();
 	}
 
 	public void mousePressed() {
@@ -93,7 +87,7 @@ public class Tonnetz extends PApplet {
 			// do something
 			return;
 		case RIGHT:
-			selectInput("Which MIDI file?", "fileSelected");
+			selectInput("Which Midi file?", "fileSelected");
 			return;
 		}
 	}
@@ -158,8 +152,7 @@ public class Tonnetz extends PApplet {
 	}
 
 	class Calc { // ragtag calculations
-		final int[] primes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
-				87, 89, 97 };
+		final int[] primes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 87, 89, 97 };
 
 		float vectorPitch(int[] a) {
 			float x = 1f;
@@ -204,30 +197,36 @@ public class Tonnetz extends PApplet {
 	}
 
 	static class ScaleInterpreter {
-		public double centralPitch = 440.0;
-		public static byte centralMIDINote = 60;
+		public static double centralPitch = 440.0;
+		public static byte centralMidiNote = 69;
 		public static String desc = "";
 		public static Interval[] scaleSegment;
 
 		public static void interpretFile(String[] file) throws Exception {
+			Interval[] s = new Interval[] {};
 			int k = 0; // non-comment
 			for (int i = 0; i < file.length; i++) {
 				if (file[i].charAt(0) != '!') {
 					if (k == 0)
 						desc = file[i];
 					if (k == 1)
-						scaleSegment = new Interval[Integer.valueOf(file[i].trim())];
+						s = new Interval[Integer.valueOf(file[i].trim())];
 					if (k > 1)
-						scaleSegment[k - 2] = interpretString(file[i].trim());
+						s[k - 2] = interpretString(file[i].trim());
 					k++;
 				}
 			}
-			int l = scaleSegment.length;
-			Interval I = scaleSegment[l - 1];
+			scaleSegment = s;
+			fillMidiNotes(s);
+		}
+
+		public static void fillMidiNotes(Interval[] s) {
+			int l = s.length;
+			Interval I = s[l - 1];
 			for (int i = 0; i < 128; i++) {
-				int p = Math.floorMod(i - centralMIDINote - 1, l);
-				int q = Math.floorDiv(i - centralMIDINote - 1, l);
-				MIDIPitches[i] = scaleSegment[p].stack(I, q).value();
+				int p = Math.floorMod(i - centralMidiNote - 1, l);
+				int q = Math.floorDiv(i - centralMidiNote - 1, l);
+				MidiPitches[i] = s[p].stack(I, q).value() * centralPitch;
 			}
 		}
 
@@ -372,7 +371,7 @@ public class Tonnetz extends PApplet {
 	}
 
 	class RecycleBin {
-		ArrayList<int[]> midiNoteOn = new ArrayList<int[]>(); // what midi keys are on (channel, note)
+		ArrayList<int[]> MidiNoteOn = new ArrayList<int[]>(); // what Midi keys are on (channel, note)
 
 		float cmod(float a, float b) {
 			return a - round(a / b) * b;
@@ -389,8 +388,8 @@ public class Tonnetz extends PApplet {
 		}
 
 		/*
-		 * public void circleMIDINotes() { strokeWeight(3); noFill(); for (int i = 0; i
-		 * < midiNoteOn.size(); i++) { int[] n = scale.get((int) (midiNoteOn.get(i)[1] %
+		 * public void circleMidiNotes() { strokeWeight(3); noFill(); for (int i = 0; i
+		 * < MidiNoteOn.size(); i++) { int[] n = scale.get((int) (MidiNoteOn.get(i)[1] %
 		 * scale.size())); PVector r = intervalVector(n); ellipse(r.x, r.y, 30, 30); }
 		 * strokeWeight(1); }
 		 */
@@ -399,16 +398,16 @@ public class Tonnetz extends PApplet {
 			if (selection == null) {
 				println("Window was closed or the user hit cancel.");
 			} else {
-				midiFile = selection;
-				readMIDI();
+				MidiFile = selection;
+				readMidi();
 			}
 		}
 
 		private Sequencer seq;
 		private Receiver note_player;
-		private Receiver MIDI_player = new Receiver() {
+		private Receiver Midi_player = new Receiver() {
 			@Override
-			// this function gets called on its own every time the midi playing in "seq"
+			// this function gets called on its own every time the Midi playing in "seq"
 			// finds an event
 			public void send(MidiMessage msg, long timeStamp) {
 				if (msg instanceof ShortMessage) {
@@ -420,15 +419,15 @@ public class Tonnetz extends PApplet {
 
 					int[] p = { channel, note };
 					if (command == ShortMessage.NOTE_ON && vel > 0) {
-						midiNoteOn.add(p);
+						MidiNoteOn.add(p);
 					} else if (command == ShortMessage.NOTE_OFF || (command == ShortMessage.NOTE_ON && vel <= 0)) {
 						// find note
 						int i = 0;
 						try {
-							while (midiNoteOn.get(i)[0] != channel || midiNoteOn.get(i)[1] != note) {
+							while (MidiNoteOn.get(i)[0] != channel || MidiNoteOn.get(i)[1] != note) {
 								i++;
 							}
-							midiNoteOn.remove(i);
+							MidiNoteOn.remove(i);
 						} catch (Exception x) {
 							println("cannot remove note!");
 						}
@@ -444,9 +443,9 @@ public class Tonnetz extends PApplet {
 		void playTone(int a, int b, int command) { // octave equivalence
 			float freq = pow((float) 1.5, a) * pow((float) 1.25, b);
 			freq = equi(freq);
-			float midiNoteWithBend = log(freq) / log(2) * 12;
-			int note = round(midiNoteWithBend) + 60;
-			// int d = (int) (cmod(midiNoteWithBend, 1f) * 4096 + 8192);
+			float MidiNoteWithBend = log(freq) / log(2) * 12;
+			int note = round(MidiNoteWithBend) + 60;
+			// int d = (int) (cmod(MidiNoteWithBend, 1f) * 4096 + 8192);
 			ShortMessage message = new ShortMessage();
 			// ShortMessage bend = new ShortMessage();
 			// println(d % 128);
@@ -460,7 +459,7 @@ public class Tonnetz extends PApplet {
 			// note_player.send(bend, -1);
 		}
 
-		void readMIDI() {
+		void readMidi() {
 			try {
 				seq.stop();
 				seq.close();
@@ -475,17 +474,17 @@ public class Tonnetz extends PApplet {
 				seq.setLoopCount(-1);
 
 				Transmitter transmitter = seq.getTransmitter();
-				transmitter.setReceiver(MIDI_player);
+				transmitter.setReceiver(Midi_player);
 
-				Sequence mid = MidiSystem.getSequence(midiFile);
+				Sequence mid = MidiSystem.getSequence(MidiFile);
 				seq.setSequence(mid);
 				seq.start();
 			}
 
 			catch (MidiUnavailableException e) { // bro where did your pc go
-				println("MIDI device unavailable!");
-			} catch (InvalidMidiDataException e) { // you've done fked up in your midi
-				println("Invalid MIDI data!");
+				println("Midi device unavailable!");
+			} catch (InvalidMidiDataException e) { // you've done fked up in your Midi
+				println("Invalid Midi data!");
 			} catch (IOException e) { // huh
 				println("I/O Error!");
 			} catch (Exception e) { // wow you fked up so bad that we had to quit

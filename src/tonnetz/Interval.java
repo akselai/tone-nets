@@ -14,7 +14,7 @@ public class Interval {
 
 	public Interval(double x_) {
 		isRational = false;
-		x = x_;
+		x = x_; // in cents;
 	}
 
 	public final static Interval OCTAVE = new Interval(2, 1);
@@ -40,6 +40,14 @@ public class Interval {
 			return new Interval(a_ / t, b_ / t);
 		}
 		return this;
+	}
+
+	public boolean equals(Interval I) {
+		if ((this.isRational && I.isRational) && (this.a == I.a) && (this.b == I.b))
+			return true;
+		if ((!this.isRational && !I.isRational) && (this.x == I.x))
+			return true;
+		return false;
 	}
 
 	public double value() {
@@ -88,11 +96,22 @@ public class Interval {
 			return String.format("%f", this.x);
 		}
 	}
+	
+	private static int floorDiv(double x, double y) {
+		return (int) Math.floor(x / y);
+	}
 
 	public static Interval[] reduce(Interval[] intervals, Interval modulus) {
 		Interval[] res = new Interval[intervals.length];
 		for (int i = 0; i < intervals.length; i++) {
-			res[i] = new Interval(intervals[i].toCents().x % modulus.toCents().x);
+			if (intervals[i].equals(modulus))
+				res[i] = modulus;
+			else {
+				if (intervals[i].isRational && modulus.isRational)
+					res[i] = intervals[i].stack(modulus, floorDiv(intervals[i].toCents().x, modulus.toCents().x));
+				else 
+					res[i] = new Interval(intervals[i].toCents().x % modulus.toCents().x);
+			}
 		}
 		return res;
 	}

@@ -11,7 +11,7 @@ public class MultilineTextBox extends PApplet {
 	PApplet p;
 
 	PFont font;
-	int fontSize = 20;
+	int fontSize = 16;
 	String prompt;
 	String[] text;
 	int xpos;
@@ -281,17 +281,17 @@ public class MultilineTextBox extends PApplet {
 		p.colorMode(RGB);
 		
 		p.fill(255);
-		p.strokeWeight(2);
+		p.strokeWeight(3);
 		p.rectMode(CORNER);
 
 		if (hasInputFocus)
 			p.stroke(220, 150, 90);
 		else 
 			p.stroke(0);
-		p.rect(loc.x, loc.y, WIDTH, HEIGHT, 6);
+		rectOct(loc.x, loc.y, WIDTH, HEIGHT, 3);
 
 		p.stroke(0);
-		font = p.createFont("audiowide.ttf", fontSize);
+		font = p.createFont("smooth.ttf", fontSize);
 		p.textFont(font);
 
 		p.textSize(fontSize);
@@ -303,9 +303,9 @@ public class MultilineTextBox extends PApplet {
 
 		if (hasFocus) {
 			for (int i = 0; i < text.length; i++)
-				p.text(text[i], (int) (loc.x + 4), (int) (loc.y + 5 + i * fontSize));
+				p.text(text[i], (int) (loc.x + 4), (int) (loc.y + 10 + i * fontSize));
 		} else
-			p.text(prompt, (int) (loc.x + 4), (int) (loc.y + 5));
+			p.text(prompt, (int) (loc.x + 4), (int) (loc.y + 10));
 
 		ypos = constrain(ypos, 0, text.length);
 		ypos2 = constrain(ypos2, 0, text.length);
@@ -375,5 +375,17 @@ public class MultilineTextBox extends PApplet {
 		}
 
 		return toReturn;
+	}
+	
+	void rectOct(float x, float y, float w, float h, float r) {
+		p.line(x + r, y, x + w - r, y);
+		p.line(x, y + r, x, y + h - r);
+		p.line(x + r, y + h, x + w - r, y + h);
+		p.line(x + w, y + r, x + w, y + h - r);
+		
+		p.line(x + r, y, x, y + r);
+		p.line(x + w - r, y, x + w, y + r);
+		p.line(x + r, y + h, x, y + h - r);
+		p.line(x + w - r, y + h, x + w, y + h - r);
 	}
 }

@@ -4,7 +4,8 @@ import java.awt.TextField;
 
 import processing.core.*;
 import processing.data.DoubleList;
-import tonnetz.Interval;
+import tonnetz.*;
+import btesting.*;
 
 public class ATesting extends PApplet {
 	public static void main(String[] args) {
@@ -23,6 +24,8 @@ public class ATesting extends PApplet {
 	DoubleList points = new DoubleList(); // represents intervals generated
 	Interval[] scala = new Interval[] {}; // the list of Intervals translated from points through private function
 											// scalaInterval
+	MidiHandler m = new MidiHandler();
+	
 	int leftSlideWidth = 270, rightSlideWidth = 270;
 
 	public void setup() {
@@ -42,7 +45,7 @@ public class ATesting extends PApplet {
 		}
 		return new int[] {};
 	}
-	
+
 	RotarySlider s = new RotarySlider(this, 300, 300, 275, 25);
 	int scaleSize = 9;
 	int rd;
@@ -86,7 +89,7 @@ public class ATesting extends PApplet {
 			if (scala.length != 0)
 				scalaTextBox.text = new String[scala.length];
 			else
-				scalaTextBox.text = new String[] {""};
+				scalaTextBox.text = new String[] { "" };
 			for (int i = 0; i < scala.length; i++)
 				scalaTextBox.text[i] = String.valueOf(scala[i]);
 		} catch (Exception x) {
@@ -124,9 +127,8 @@ public class ATesting extends PApplet {
 				double second = points.get(j) - Math.PI / 2;
 				line((float) (s.radius * Math.cos(first) + s.centerX), (float) (s.radius * Math.sin(first) + s.centerY), (float) (s.radius * Math.cos(second) + s.centerX), (float) (s.radius * Math.sin(second) + s.centerY));
 			}
-			fill(200);
-			stroke(60);
-			strokeWeight(1);
+			fill(180);
+			noStroke();
 
 			pushMatrix();
 			translate((float) (s.radius * Math.cos(points.get(i) - Math.PI / 2) + s.centerX), (float) (s.radius * Math.sin(points.get(i) - Math.PI / 2) + s.centerY));
@@ -145,6 +147,14 @@ public class ATesting extends PApplet {
 		}
 		s.updateDisplay();
 		drawMOSRanges();
+		
+	    try {
+			m.scale = ScaleInterpreter.interpretFileNoHeader(scalaTextBox.text);
+		} catch (Exception e) {
+			e.printStackTrace();
+			//System.exit(0);
+		}
+	    
 	}
 
 	public void mousePressed() {
@@ -167,7 +177,12 @@ public class ATesting extends PApplet {
 
 	private void scalaInterval() {
 		scala = new Interval[points.size()];
-		for (int i = 0; i < points.size(); i++) {
+		try {
+			scala[0] = new Interval(2, 1);
+		} catch (Exception x) {
+			;
+		}
+		for (int i = 1; i < points.size(); i++) {
 			scala[i] = new Interval(points.get(i) / Math.PI / 2 * 1200);
 		}
 		scala = Interval.reduce(scala, Interval.OCTAVE);
